@@ -77,7 +77,7 @@ resource "aws_wafv2_ip_set" "blocked_v6" {
 resource "aws_wafv2_rule_group" "custom_rules" {
   name     = "${var.name_prefix}-custom-rg"
   scope    = "CLOUDFRONT"
-  capacity = 50
+  capacity = 200  # bumped from 50 to accommodate CAPTCHA/challenge rules (Day 33)
 
   # ---------------------------------------------------------------------------
   # Rule 1 — BlockListedIPs
@@ -225,6 +225,130 @@ resource "aws_wafv2_rule_group" "custom_rules" {
       cloudwatch_metrics_enabled = true
       metric_name                = "${var.metric_name}-Custom-BlockPathTraversal"
       sampled_requests_enabled   = true
+    }
+  }
+
+  # ---------------------------------------------------------------------------
+  # Rule 4 — CaptchaOnAuthPaths (Day 33)
+  # Apply CAPTCHA — not a hard block — on `/login` and `/signup`.
+  # Credential-stuffing tooling fails CAPTCHA solving at scale, while
+  # legitimate users solve it once and proceed. The starts_with byte-match
+  # over the URI path keeps this cheap; we OR across the configured paths
+  # so operators can extend the list via `var.captcha_paths`.
+  # ---------------------------------------------------------------------------
+  dynamic "rule" {
+    for_each = length(var.captcha_paths) > 0 ? [1] : []
+    content {
+      name     = "CaptchaOnAuthPaths"
+      priority = 4
+
+      action {
+        captcha {
+          custom_request_handling {
+            insert_header {
+              name  = "x-edge-action"
+              value = "captcha-auth"
+            }
+          }
+        }
+      }
+
+      captcha_config {
+        immunity_time_property {
+          # Once solved, the user is exempt for 5 minutes — long enough to
+          # complete login flows including OTP entry, short enough that a
+          # solved-once-and-replay attack is bounded.
+          immunity_time = 300
+        }
+      }
+
+      statement {
+        or_statement {
+          dynamic "statement" {
+            for_each = var.captcha_paths
+            content {
+              byte_match_statement {
+                positional_constraint = "STARTS_WITH"
+                search_string         = statement.value
+                field_to_match {
+                  uri_path {}
+                }
+                text_transformation {
+                  priority = 0
+                  type     = "LOWERCASE"
+                }
+              }
+            }
+          }
+        }
+      }
+
+      visibility_config {
+        cloudwatch_metrics_enabled = true
+        metric_name                = "${var.metric_name}-Custom-CaptchaOnAuthPaths"
+        sampled_requests_enabled   = true
+      }
+    }
+  }
+
+  # ---------------------------------------------------------------------------
+  # Rule 5 — ChallengeOnCheckout (Day 33)
+  # Silent token challenge on `/checkout`. Unlike CAPTCHA this is invisible
+  # to real browsers (the WAF token is verified automatically) but
+  # automated abuse without a token is rejected. Used on high-value
+  # transactional endpoints where a CAPTCHA would impact conversion.
+  # ---------------------------------------------------------------------------
+  dynamic "rule" {
+    for_each = length(var.challenge_paths) > 0 ? [1] : []
+    content {
+      name     = "ChallengeOnCheckout"
+      priority = 5
+
+      action {
+        challenge {
+          custom_request_handling {
+            insert_header {
+              name  = "x-edge-action"
+              value = "challenge-checkout"
+            }
+          }
+        }
+      }
+
+      challenge_config {
+        immunity_time_property {
+          # 10 minutes — covers a typical checkout flow including 3DS
+          # redirects without re-challenging the user.
+          immunity_time = 600
+        }
+      }
+
+      statement {
+        or_statement {
+          dynamic "statement" {
+            for_each = var.challenge_paths
+            content {
+              byte_match_statement {
+                positional_constraint = "STARTS_WITH"
+                search_string         = statement.value
+                field_to_match {
+                  uri_path {}
+                }
+                text_transformation {
+                  priority = 0
+                  type     = "LOWERCASE"
+                }
+              }
+            }
+          }
+        }
+      }
+
+      visibility_config {
+        cloudwatch_metrics_enabled = true
+        metric_name                = "${var.metric_name}-Custom-ChallengeOnCheckout"
+        sampled_requests_enabled   = true
+      }
     }
   }
 

@@ -130,3 +130,121 @@ variable "rate_limit_action" {
     error_message = "rate_limit_action must be 'block' or 'count'."
   }
 }
+
+###############################################################################
+# Day 33 — Bot Control + CAPTCHA / challenge actions + WAF logging.
+###############################################################################
+
+variable "bot_control_enabled" {
+  description = <<-EOT
+    Master switch for the AWSManagedRulesBotControlRuleSet and the
+    accompanying `bot_label_responses` custom rule group. Disable in
+    pre-production or when running cost-sensitive workloads — Bot Control
+    has request-based pricing in addition to the standard WAF charges.
+  EOT
+  type        = bool
+  default     = true
+}
+
+variable "bot_control_inspection_level" {
+  description = <<-EOT
+    Bot Control inspection level. COMMON is signature-based (cheaper);
+    TARGETED adds ML / behavioural heuristics (catches sophisticated bots
+    such as headless Chrome, Selenium, Puppeteer). See
+    docs/bot-control-guide.md for the trade-off.
+  EOT
+  type        = string
+  default     = "TARGETED"
+
+  validation {
+    condition     = contains(["COMMON", "TARGETED"], var.bot_control_inspection_level)
+    error_message = "bot_control_inspection_level must be 'COMMON' or 'TARGETED'."
+  }
+}
+
+variable "bot_control_scope_down_path" {
+  description = <<-EOT
+    URI path prefix that constrains Bot Control to only inspect a subset
+    of requests. Defaults to `/api` so we skip cheap static traffic and
+    avoid Bot Control's per-request fee on assets. Pass `/` to inspect
+    every request.
+  EOT
+  type        = string
+  default     = "/api"
+
+  validation {
+    condition     = can(regex("^/", var.bot_control_scope_down_path))
+    error_message = "bot_control_scope_down_path must start with a forward slash."
+  }
+}
+
+variable "trusted_bot_ips" {
+  description = <<-EOT
+    IPv4 CIDRs allowed to bypass Bot Control inspection (typically your
+    own monitoring egress and partner integrations). Empty by default;
+    AWS treats an empty IPSet as never-matching so the bypass is a no-op.
+  EOT
+  type        = list(string)
+  default     = []
+
+  validation {
+    condition = alltrue([
+      for cidr in var.trusted_bot_ips : can(cidrnetmask(cidr))
+    ])
+    error_message = "Every trusted_bot_ips entry must be a valid IPv4 CIDR (e.g. 10.0.0.0/16)."
+  }
+}
+
+variable "captcha_paths" {
+  description = <<-EOT
+    URI path prefixes that trigger a CAPTCHA challenge instead of a
+    block. Default covers the canonical authentication surfaces where
+    CAPTCHA is more user-friendly than a hard block. Set to `[]` to
+    disable.
+  EOT
+  type        = list(string)
+  default     = ["/login", "/signup"]
+
+  validation {
+    condition = alltrue([
+      for p in var.captcha_paths : can(regex("^/", p))
+    ])
+    error_message = "Every captcha_paths entry must start with a forward slash."
+  }
+}
+
+variable "challenge_paths" {
+  description = <<-EOT
+    URI path prefixes that trigger a silent token challenge. Useful on
+    high-value transactional endpoints (`/checkout`) where blocking real
+    customers is unacceptable but unauthenticated bots must be filtered
+    out. Set to `[]` to disable.
+  EOT
+  type        = list(string)
+  default     = ["/checkout"]
+
+  validation {
+    condition = alltrue([
+      for p in var.challenge_paths : can(regex("^/", p))
+    ])
+    error_message = "Every challenge_paths entry must start with a forward slash."
+  }
+}
+
+variable "log_destination_arn" {
+  description = <<-EOT
+    ARN of a Kinesis Firehose delivery stream that receives WAF logs.
+    Created in Day 35 (`feat(waf-logs)`). Pass `""` to disable logging
+    entirely (the logging configuration resource is omitted via count).
+  EOT
+  type        = string
+  default     = ""
+
+  validation {
+    condition = (
+      var.log_destination_arn == "" ||
+      can(regex("^arn:aws[a-zA-Z-]*:firehose:[a-z0-9-]+:[0-9]{12}:deliverystream/.+$", var.log_destination_arn))
+    )
+    error_message = "log_destination_arn must be empty or a valid Firehose delivery-stream ARN."
+  }
+}

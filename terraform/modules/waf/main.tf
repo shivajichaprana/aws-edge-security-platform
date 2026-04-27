@@ -223,6 +223,127 @@ resource "aws_wafv2_web_acl" "this" {
   }
 
   # ---------------------------------------------------------------------------
+  # Rule 65 — AWSManagedRulesBotControlRuleSet  (Day 33, ~50 WCU)
+  #
+  # Sophisticated bot detection. Wrapped in a `scope_down_statement` so it
+  # only inspects requests targeting the high-value `/api` surface — see
+  # bot_control.tf and docs/bot-control-guide.md for the rationale.
+  #
+  # Trusted bot IPs (own monitoring, partner agents) are excluded via a
+  # NOT statement that references `aws_wafv2_ip_set.trusted_bots`.
+  #
+  # Several bot categories are routed to *count* (rather than block) so the
+  # downstream `BotLabelResponses` rule group can apply CAPTCHA/challenge
+  # per category — the standard two-stage Bot Control pattern.
+  # ---------------------------------------------------------------------------
+  dynamic "rule" {
+    for_each = local.bot_control_enabled ? [1] : []
+    content {
+      name     = "AWSManagedRulesBotControlRuleSet"
+      priority = 65
+
+      override_action {
+        none {}
+      }
+
+      statement {
+        managed_rule_group_statement {
+          vendor_name = "AWS"
+          name        = "AWSManagedRulesBotControlRuleSet"
+
+          managed_rule_group_configs {
+            aws_managed_rules_bot_control_rule_set {
+              inspection_level        = local.bot_control_inspection_level
+              enable_machine_learning = local.bot_control_inspection_level == "TARGETED"
+            }
+          }
+
+          # Convert categories we want to handle gracefully (CAPTCHA /
+          # challenge instead of block) into COUNT so the bot label
+          # responder rule group can act on the labels downstream.
+          dynamic "rule_action_override" {
+            for_each = local.bot_control_count_rules
+            content {
+              name = rule_action_override.value
+              action_to_use {
+                count {}
+              }
+            }
+          }
+
+          # scope_down_statement: only inspect requests targeting the
+          # configured prefix (default `/api`) AND not coming from a
+          # trusted-bot CIDR.
+          scope_down_statement {
+            and_statement {
+              statement {
+                byte_match_statement {
+                  positional_constraint = "STARTS_WITH"
+                  search_string         = local.bot_control_scope_down_path
+                  field_to_match {
+                    uri_path {}
+                  }
+                  text_transformation {
+                    priority = 0
+                    type     = "LOWERCASE"
+                  }
+                }
+              }
+              statement {
+                not_statement {
+                  statement {
+                    ip_set_reference_statement {
+                      arn = aws_wafv2_ip_set.trusted_bots[0].arn
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+
+      visibility_config {
+        cloudwatch_metrics_enabled = true
+        metric_name                = "${var.metric_name}-BotControl"
+        sampled_requests_enabled   = true
+      }
+    }
+  }
+
+  # ---------------------------------------------------------------------------
+  # Rule 67 — Bot label responder rule group (defined in bot_control.tf)
+  #
+  # Reads the labels emitted by the BotControl rule above and applies
+  # CAPTCHA / challenge / allow per category. This MUST run after the
+  # BotControl rule (priority 65) but before any block rule that might
+  # short-circuit a category we want to challenge instead.
+  # ---------------------------------------------------------------------------
+  dynamic "rule" {
+    for_each = local.bot_control_enabled ? [1] : []
+    content {
+      name     = "BotLabelResponses"
+      priority = 67
+
+      override_action {
+        none {}
+      }
+
+      statement {
+        rule_group_reference_statement {
+          arn = aws_wafv2_rule_group.bot_label_responses[0].arn
+        }
+      }
+
+      visibility_config {
+        cloudwatch_metrics_enabled = true
+        metric_name                = "${var.metric_name}-BotLabelResponses"
+        sampled_requests_enabled   = true
+      }
+    }
+  }
+
+  # ---------------------------------------------------------------------------
   # Rule 70 — RateLimit rule group (defined in rate_limit.tf)
   # Per-IP global rate-limit + per-IP /login rate-limit.
   # ---------------------------------------------------------------------------
