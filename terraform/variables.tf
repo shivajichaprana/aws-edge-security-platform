@@ -67,3 +67,30 @@ variable "extra_tags" {
   type        = map(string)
   default     = {}
 }
+
+###############################################################################
+# Day 35 — WAF log analytics pipeline.
+###############################################################################
+
+variable "enable_waf_logs" {
+  description = "Whether to provision the Firehose -> S3 -> Glue -> Athena WAF log analytics stack."
+  type        = bool
+  default     = true
+}
+
+variable "waf_log_retention_days" {
+  description = "Total retention (days) for WAF Parquet logs in S3 before lifecycle expiry."
+  type        = number
+  default     = 365
+
+  validation {
+    condition     = var.waf_log_retention_days >= 90 && var.waf_log_retention_days <= 2555
+    error_message = "waf_log_retention_days must be between 90 (regulator minimum) and 2555 (~7 years)."
+  }
+}
+
+variable "waf_logs_analyst_principal_arns" {
+  description = "IAM ARNs of analyst principals allowed to decrypt WAF logs via S3 / Athena. Empty by default."
+  type        = list(string)
+  default     = []
+}
