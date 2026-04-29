@@ -45,3 +45,8 @@ output "waf_logs_glue_database" {
   description = "Glue database name with the waf_logs table (null when waf logs disabled)."
   value       = var.enable_waf && var.enable_waf_logs ? module.waf_logs[0].glue_database_name : null
 }
+
+output "waf_logs_athena_workgroup" {
+  description = "Athena workgroup configured for WAF analytics (null when waf logs disabled)."
+  value       = var.enable_waf && var.enable_waf_logs ? module.waf_logs[0].athena_workgroup : null
+}

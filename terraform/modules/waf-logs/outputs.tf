@@ -83,3 +83,31 @@ output "glue_crawler_name" {
   description = "Name of the daily Glue crawler that detects schema drift and back-fills missing partitions."
   value       = aws_glue_crawler.waf_logs.name
 }
+
+###############################################################################
+# Athena.
+###############################################################################
+
+output "athena_workgroup" {
+  description = "Athena workgroup configured for WAF-log analytics."
+  value       = aws_athena_workgroup.waf_logs.name
+}
+
+output "athena_results_bucket" {
+  description = "S3 bucket where Athena writes query result CSVs (7-day expiry)."
+  value       = aws_s3_bucket.athena_results.id
+}
+
+output "athena_named_query_ids" {
+  description = "IDs of the saved Athena queries provisioned by this module."
+  value = {
+    top_blocked_ips          = aws_athena_named_query.top_blocked_ips.id
+    top_matched_rules        = aws_athena_named_query.top_matched_rules.id
+    status_code_distribution = aws_athena_named_query.status_code_distribution.id
+    requests_by_country      = aws_athena_named_query.requests_by_country.id
+    captcha_pass_rate        = aws_athena_named_query.captcha_pass_rate.id
+    uri_attack_distribution  = aws_athena_named_query.uri_attack_distribution.id
+    anomalous_user_agents    = aws_athena_named_query.anomalous_user_agents.id
+    rate_limit_hits_per_path = aws_athena_named_query.rate_limit_hits_per_path.id
+  }
+}
