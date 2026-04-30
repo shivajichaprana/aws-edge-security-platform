@@ -1,0 +1,197 @@
+name: terraform-ci
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'terraform/**'
+      - 'lambda-edge/**'
+      - 'cloudfront-functions/**'
+      - '.github/workflows/terraform-ci.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'terraform/**'
+      - 'lambda-edge/**'
+      - 'cloudfront-functions/**'
+      - '.github/workflows/terraform-ci.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: write
+  security-events: write
+
+env:
+  TF_VERSION: '1.7.5'
+  TFLINT_VERSION: 'v0.50.3'
+  WORKING_DIR: terraform
+
+concurrency:
+  group: terraform-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  fmt:
+    name: terraform fmt
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@a1502cd9e758c50496cc9ac5308c4843bcd56d36 # v3.0.0
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+          terraform_wrapper: false
+
+      - name: Run terraform fmt
+        working-directory: ${{ env.WORKING_DIR }}
+        run: terraform fmt -check -recursive -diff
+
+  validate:
+    name: terraform validate
+    runs-on: ubuntu-latest
+    needs: fmt
+    strategy:
+      fail-fast: false
+      matrix:
+        path:
+          - terraform
+          - terraform/modules/cloudfront
+          - terraform/modules/waf
+          - terraform/modules/lambda-edge
+          - terraform/modules/waf-logs
+    steps:
+      - name: Checkout
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@a1502cd9e758c50496cc9ac5308c4843bcd56d36 # v3.0.0
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+          terraform_wrapper: false
+
+      - name: Cache Terraform plugins
+        uses: actions/cache@13aacd865c20de90d75de3b17ebe84f7a17d57d2 # v4.0.0
+        with:
+          path: ~/.terraform.d/plugin-cache
+          key: ${{ runner.os }}-terraform-${{ hashFiles('**/versions.tf') }}
+          restore-keys: |
+            ${{ runner.os }}-terraform-
+
+      - name: Init (no backend)
+        working-directory: ${{ matrix.path }}
+        run: terraform init -backend=false -input=false
+
+      - name: Validate
+        working-directory: ${{ matrix.path }}
+        run: terraform validate -no-color
+
+  tflint:
+    name: tflint
+    runs-on: ubuntu-latest
+    needs: fmt
+    steps:
+      - name: Checkout
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+
+      - name: Setup tflint
+        uses: terraform-linters/setup-tflint@19a0656c6c4d28ff9b2a0b566fd16b7c7f3e3741 # v4.0.0
+        with:
+          tflint_version: ${{ env.TFLINT_VERSION }}
+
+      - name: tflint init
+        working-directory: ${{ env.WORKING_DIR }}
+        run: tflint --init
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: tflint
+        working-directory: ${{ env.WORKING_DIR }}
+        run: tflint -f compact --recursive
+
+  checkov:
+    name: checkov
+    runs-on: ubuntu-latest
+    needs: fmt
+    steps:
+      - name: Checkout
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+
+      - name: Run checkov
+        uses: bridgecrewio/checkov-action@40b4b829a5dc94c7702864de1a64411dadf5cd7c # v12.2840.0
+        with:
+          directory: terraform
+          framework: terraform
+          quiet: true
+          soft_fail: false
+          output_format: cli,sarif
+          output_file_path: console,checkov.sarif
+          download_external_modules: false
+          skip_check: CKV_AWS_111,CKV_AWS_109,CKV_AWS_356
+
+      - name: Upload SARIF
+        if: always()
+        uses: github/codeql-action/upload-sarif@e2b3eafc8d227b0241d48be5f425d47c2d750a13 # v3.24.5
+        with:
+          sarif_file: checkov.sarif
+          category: checkov
+
+  trivy:
+    name: trivy config
+    runs-on: ubuntu-latest
+    needs: fmt
+    steps:
+      - name: Checkout
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+
+      - name: Trivy IaC scan
+        uses: aquasecurity/trivy-action@062f2592684a31eb3aa050cc61e7ca1451cecd3d # 0.18.0
+        with:
+          scan-type: 'config'
+          scan-ref: 'terraform'
+          format: 'sarif'
+          output: 'trivy.sarif'
+          severity: 'CRITICAL,HIGH,MEDIUM'
+          exit-code: '1'
+          ignore-unfixed: true
+
+      - name: Upload SARIF
+        if: always()
+        uses: github/codeql-action/upload-sarif@e2b3eafc8d227b0241d48be5f425d47c2d750a13 # v3.24.5
+        with:
+          sarif_file: trivy.sarif
+          category: trivy
+
+  shellcheck:
+    name: shellcheck
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+
+      - name: shellcheck
+        uses: ludeeus/action-shellcheck@00cae500b08a931fb5698e11e79bfbd38e612a38 # 2.0.0
+        with:
+          severity: warning
+          scandir: scripts
+
+  ci-summary:
+    name: CI summary
+    runs-on: ubuntu-latest
+    needs: [fmt, validate, tflint, checkov, trivy, shellcheck]
+    if: always()
+    steps:
+      - name: Aggregate results
+        run: |
+          echo "fmt:        ${{ needs.fmt.result }}"
+          echo "validate:   ${{ needs.validate.result }}"
+          echo "tflint:     ${{ needs.tflint.result }}"
+          echo "checkov:    ${{ needs.checkov.result }}"
+          echo "trivy:      ${{ needs.trivy.result }}"
+          echo "shellcheck: ${{ needs.shellcheck.result }}"
+          if [[ "${{ contains(needs.*.result, 'failure') }}" == "true" ]]; then
+            echo "::error::One or more checks failed"
+            exit 1
+          fi

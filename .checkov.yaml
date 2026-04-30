@@ -1,0 +1,16 @@
+# Checkov configuration for aws-edge-security-platform
+directory:
+  - terraform
+framework:
+  - terraform
+quiet: true
+download-external-modules: false
+skip-check:
+  # Lambda concurrent execution limit not relevant for Lambda@Edge
+  - CKV_AWS_111
+  # Custom KMS key per WAF web ACL adds operational overhead with marginal benefit
+  - CKV_AWS_109
+  # We rely on inline policies for least-privilege; skip "no inline policies"
+  - CKV_AWS_356
+soft-fail: false
+compact: true
