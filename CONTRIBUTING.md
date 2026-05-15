@@ -104,4 +104,4 @@ The maintainers tag `vMAJOR.MINOR.PATCH` releases. Patch versions for documentat
 
 ## Questions?
 
-Open a Discussion in the repo, or ping `@shivajichaprana` on the PR.
+Open a Discussion in the repo or comment on the PR.
