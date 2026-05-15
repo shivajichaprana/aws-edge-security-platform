@@ -189,4 +189,4 @@ Use the `cost_alarm_monthly_usd` variable to set a CloudWatch billing alarm.
 
 ## License
 
-[MIT](LICENSE) © Shivaji Chaprana
+Released under the [MIT License](LICENSE).
