@@ -3,7 +3,7 @@
 #
 # These are surfaced through the root module so:
 #   - the WAF module can attach the Firehose ARN to the web ACL logging
-#     configuration (Day 33's `log_destination_arn` plumbing); and
+#     configuration (the `log_destination_arn` plumbing); and
 #   - operators can consume the resource names in BI tooling (Grafana,
 #     QuickSight) without re-deriving them from input variables.
 ###############################################################################

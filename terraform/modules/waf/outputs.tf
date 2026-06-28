@@ -23,7 +23,7 @@ output "web_acl_capacity" {
 }
 
 ###############################################################################
-# Day 33 outputs — Bot Control + logging.
+# Bot Control + logging outputs.
 ###############################################################################
 
 output "bot_control_enabled" {
@@ -42,7 +42,7 @@ output "trusted_bots_ipset_arn" {
 }
 
 output "logging_configuration_id" {
-  description = "ID of the WAF logging configuration. null when log_destination_arn is empty (Day 35 wires this up)."
+  description = "ID of the WAF logging configuration. null when log_destination_arn is empty (the waf-logs module wires this up)."
   value = (
     length(var.log_destination_arn) > 0
     ? aws_wafv2_web_acl_logging_configuration.this[0].id

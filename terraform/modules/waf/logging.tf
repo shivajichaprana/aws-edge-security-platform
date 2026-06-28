@@ -1,12 +1,12 @@
 ###############################################################################
 # WAF logging configuration.
 #
-# Day 33 wires up the `aws_wafv2_web_acl_logging_configuration` resource
+# This wires up the `aws_wafv2_web_acl_logging_configuration` resource
 # pointing at a Kinesis Firehose delivery stream — that stream itself is
-# created in Day 35 (`feat(waf-logs)`) along with the Glue catalog and
+# created by the waf-logs module along with the Glue catalog and
 # Athena queries that consume the logs.
 #
-# Until Day 35 lands, operators pass `var.log_destination_arn = ""` and
+# Until that destination exists, operators pass `var.log_destination_arn = ""` and
 # this resource is omitted via the `count` guard. Once the Firehose ARN
 # is available, the logging configuration attaches it to the web ACL.
 #
@@ -15,7 +15,7 @@
 #   - `log_destination_configs` accepts S3 (via Firehose), CloudWatch Logs
 #     log group, or Firehose delivery stream ARNs. Firehose is preferred
 #     because it lands data in S3 in Parquet via Glue, which is what the
-#     Athena queries (Day 35) expect.
+#     Athena queries expect.
 #
 #   - `redacted_fields` strips PII / secrets BEFORE the log record is
 #     emitted. We redact:
@@ -35,8 +35,8 @@
 ###############################################################################
 
 resource "aws_wafv2_web_acl_logging_configuration" "this" {
-  # Only attach when the operator has provisioned a destination — Day 35
-  # creates the Firehose and passes its ARN through the root module.
+  # Only attach when the operator has provisioned a destination — the
+  # waf-logs module creates the Firehose and passes its ARN through the root.
   count = length(var.log_destination_arn) > 0 ? 1 : 0
 
   resource_arn            = aws_wafv2_web_acl.this.arn
@@ -128,5 +128,5 @@ resource "aws_wafv2_web_acl_logging_configuration" "this" {
   # The destination Firehose must exist before this resource is created;
   # we cannot enforce that with an explicit depends_on because the ARN is
   # passed as a string variable, but the count guard means we skip
-  # creation entirely until Day 35 wires the value through.
+  # creation entirely until the waf-logs module wires the value through.
 }

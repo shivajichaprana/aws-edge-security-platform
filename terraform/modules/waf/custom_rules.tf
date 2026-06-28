@@ -77,7 +77,7 @@ resource "aws_wafv2_ip_set" "blocked_v6" {
 resource "aws_wafv2_rule_group" "custom_rules" {
   name     = "${var.name_prefix}-custom-rg"
   scope    = "CLOUDFRONT"
-  capacity = 200  # bumped from 50 to accommodate CAPTCHA/challenge rules (Day 33)
+  capacity = 200  # bumped from 50 to accommodate CAPTCHA/challenge rules
 
   # ---------------------------------------------------------------------------
   # Rule 1 — BlockListedIPs
@@ -229,7 +229,7 @@ resource "aws_wafv2_rule_group" "custom_rules" {
   }
 
   # ---------------------------------------------------------------------------
-  # Rule 4 — CaptchaOnAuthPaths (Day 33)
+  # Rule 4 — CaptchaOnAuthPaths
   # Apply CAPTCHA — not a hard block — on `/login` and `/signup`.
   # Credential-stuffing tooling fails CAPTCHA solving at scale, while
   # legitimate users solve it once and proceed. The starts_with byte-match
@@ -292,7 +292,7 @@ resource "aws_wafv2_rule_group" "custom_rules" {
   }
 
   # ---------------------------------------------------------------------------
-  # Rule 5 — ChallengeOnCheckout (Day 33)
+  # Rule 5 — ChallengeOnCheckout
   # Silent token challenge on `/checkout`. Unlike CAPTCHA this is invisible
   # to real browsers (the WAF token is verified automatically) but
   # automated abuse without a token is rejected. Used on high-value

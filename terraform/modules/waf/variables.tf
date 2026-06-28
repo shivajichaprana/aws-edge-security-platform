@@ -36,7 +36,7 @@ variable "tags" {
 }
 
 ###############################################################################
-# Day 32 — geo allow-list, blocked-IP list, rate-limit thresholds.
+# Geo allow-list, blocked-IP list, rate-limit thresholds.
 ###############################################################################
 
 variable "allowed_countries" {
@@ -132,7 +132,7 @@ variable "rate_limit_action" {
 }
 
 ###############################################################################
-# Day 33 — Bot Control + CAPTCHA / challenge actions + WAF logging.
+# Bot Control + CAPTCHA / challenge actions + WAF logging.
 ###############################################################################
 
 variable "bot_control_enabled" {
@@ -234,7 +234,7 @@ variable "challenge_paths" {
 variable "log_destination_arn" {
   description = <<-EOT
     ARN of a Kinesis Firehose delivery stream that receives WAF logs.
-    Created in Day 35 (`feat(waf-logs)`). Pass `""` to disable logging
+    Created by the waf-logs module. Pass `""` to disable logging
     entirely (the logging configuration resource is omitted via count).
   EOT
   type        = string

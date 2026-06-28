@@ -28,7 +28,7 @@ output "waf_web_acl_id" {
 }
 
 ###############################################################################
-# Day 35 — WAF logs (Firehose / Glue / Athena).
+# WAF logs (Firehose / Glue / Athena).
 ###############################################################################
 
 output "waf_logs_firehose_arn" {

@@ -69,7 +69,7 @@ variable "extra_tags" {
 }
 
 ###############################################################################
-# Day 35 — WAF log analytics pipeline.
+# WAF log analytics pipeline.
 ###############################################################################
 
 variable "enable_waf_logs" {

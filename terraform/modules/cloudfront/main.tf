@@ -2,9 +2,9 @@
 # CloudFront distribution — fronts an existing ALB origin and (optionally)
 # attaches a WAFv2 web ACL ARN.
 #
-# Day-31 baseline only. Subsequent days add Lambda@Edge associations
-# (Day 34), a CloudFront Function for URL rewrite (Day 34), and a real-time
-# log subscription to a Firehose stream (Day 35).
+# Baseline distribution. Optional add-ons include Lambda@Edge associations,
+# a CloudFront Function for URL rewrite, and a real-time
+# log subscription to a Firehose stream.
 ###############################################################################
 
 terraform {
@@ -58,7 +58,7 @@ resource "aws_cloudfront_distribution" "this" {
 
     custom_header {
       name  = "X-Origin-Verify"
-      value = "REPLACE_WITH_SECRET" # rotated via SecretsManager on Day 32
+      value = "REPLACE_WITH_SECRET" # rotated via Secrets Manager
     }
   }
 
@@ -98,7 +98,7 @@ resource "aws_cloudfront_distribution" "this" {
 
   # ---------------------------------------------------------------------------
   # Restrictions — geographic restriction (none by default; managed via WAF
-  # geo-match rules on Day 32 instead, which is more flexible).
+  # geo-match rules instead, which is more flexible).
   # ---------------------------------------------------------------------------
   restrictions {
     geo_restriction {
@@ -109,7 +109,7 @@ resource "aws_cloudfront_distribution" "this" {
   # ---------------------------------------------------------------------------
   # Custom error responses — keep the origin from leaking 5xx HTML by serving
   # a friendly static page from the cache. Path is rewritten by a CloudFront
-  # Function in Day 34; for now a 5-second cache prevents thundering herds.
+  # Function; for now a 5-second cache prevents thundering herds.
   # ---------------------------------------------------------------------------
   custom_error_response {
     error_code         = 502
@@ -134,7 +134,7 @@ resource "aws_cloudfront_distribution" "this" {
 
   # ---------------------------------------------------------------------------
   # Viewer certificate — defaults to the CloudFront default (cloudfront.net).
-  # Once Route 53 + ACM are wired up (out-of-scope for Day 31) this block will
+  # Once Route 53 + ACM are wired up (out of scope for the baseline) this block will
   # be replaced with `acm_certificate_arn` + `ssl_support_method = "sni-only"`.
   # ---------------------------------------------------------------------------
   viewer_certificate {
@@ -142,7 +142,7 @@ resource "aws_cloudfront_distribution" "this" {
   }
 
   # ---------------------------------------------------------------------------
-  # Standard logging — optional; Day 35 sets up real-time logs via Kinesis
+  # Standard logging — optional; the waf-logs pipeline sets up real-time logs via Kinesis
   # Data Streams + Firehose, which is materially better for security analytics.
   # ---------------------------------------------------------------------------
   dynamic "logging_config" {

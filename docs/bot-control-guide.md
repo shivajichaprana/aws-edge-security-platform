@@ -13,7 +13,7 @@
   can resolve a challenge instead of failing silently.
 - Search engine crawlers (Googlebot, Bingbot) are explicitly **allowed**
   so SEO does not regress.
-- Default-allow records are dropped from logs (Day 35 — Athena indexing
+- Default-allow records are dropped from logs (Athena indexing
   ignores them anyway), saving 80–95% of log volume on most workloads.
 
 ## Targeted vs Common — what's the difference?
@@ -151,7 +151,7 @@ mode. Monitor real user complaints and the `BotControlBlocked` and
 
 - If false positives appear on `signal:automated_browser`, change the
   label-response rule from `captcha` to `count` and inspect the matched
-  user agents in WAF sample logs (Day 35 / Athena queries).
+  user agents in WAF sample logs (via Athena queries).
 - If CAPTCHA solve rate is below 60%, the CAPTCHA puzzle may be too
   hard — open an AWS support case to lower the difficulty.
 
@@ -178,7 +178,7 @@ mode. Monitor real user complaints and the `BotControlBlocked` and
 - [ ] Verify the WAF token JS is served on pages that lead to
   `/checkout` (silent challenge requires the token).
 - [ ] Add the platform's monitoring egress CIDRs to `trusted_bot_ips`.
-- [ ] Run the WAF logging Athena queries (Day 35) at least weekly to
+- [ ] Run the WAF logging Athena queries at least weekly to
   spot tuning opportunities.
 - [ ] After 30 days, archive the BotControl CloudWatch metrics for
   trend analysis — you'll need the baseline for any future tuning.

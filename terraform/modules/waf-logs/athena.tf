@@ -1,7 +1,7 @@
 ###############################################################################
 # WAF logs — Athena workgroup + named (saved) queries.
 #
-# Day 35 (`feat(athena)`).
+# Part of the WAF log analytics pipeline.
 #
 # Workgroup pattern:
 #

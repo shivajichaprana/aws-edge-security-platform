@@ -1,7 +1,7 @@
 ###############################################################################
 # WAF logs — S3 bucket + KMS CMK + lifecycle policy.
 #
-# Day 35 (`feat(waf-logs)`).
+# Part of the WAF log analytics pipeline.
 #
 # Storage strategy (cost vs. retention):
 #
@@ -283,10 +283,10 @@ resource "aws_s3_bucket_policy" "waf_logs" {
 ###############################################################################
 # Lifecycle policy.
 #
-# Day 0–30:    Standard       (~$0.023/GB-mo)
-# Day 30–90:   Standard-IA    (~$0.0125/GB-mo, 30 d minimum)
-# Day 90–365:  Glacier IR     (~$0.004/GB-mo, 90 d minimum)
-# Day 365:     Expire         (delete current version)
+# Age 0–30 d:   Standard       (~$0.023/GB-mo)
+# Age 30–90 d:  Standard-IA    (~$0.0125/GB-mo, 30 d minimum)
+# Age 90–365 d: Glacier IR     (~$0.004/GB-mo, 90 d minimum)
+# Age 365 d+:   Expire         (delete current version)
 # Noncurrent:  Expire after 30 d (keeps undelete window short for cost)
 ###############################################################################
 

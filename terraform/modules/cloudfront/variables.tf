@@ -71,7 +71,7 @@ variable "max_ttl" {
 }
 
 variable "log_bucket_domain_name" {
-  description = "Optional S3 bucket DOMAIN NAME (e.g. my-bucket.s3.amazonaws.com) for CloudFront standard logs. Null disables standard logging — Day 35 wires up real-time WAF logs separately."
+  description = "Optional S3 bucket DOMAIN NAME (e.g. my-bucket.s3.amazonaws.com) for CloudFront standard logs. Null disables standard logging — the waf-logs module wires up real-time WAF logs separately."
   type        = string
   default     = null
 }

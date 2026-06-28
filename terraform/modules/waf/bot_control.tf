@@ -1,7 +1,7 @@
 ###############################################################################
 # Bot Control — AWS managed rule group for sophisticated bot detection.
 #
-# Day 33 deliverable. Bot Control is the costliest managed rule group AWS
+# Bot Control is the costliest managed rule group AWS
 # offers (priced per 1M requests inspected) and consumes ~50 WCU on top of
 # the existing managed rules. To keep cost predictable we do TWO things:
 #

@@ -8,9 +8,9 @@
 #   - cloudfront: distribution with the upstream ALB as origin and the WAF
 #                 web ACL ARN attached.
 #   - lambda-edge: security-headers, geo-router, header-rewrite functions
-#                 and a CloudFront URL-rewrite function (Day 34).
+#                 and a CloudFront URL-rewrite function.
 #   - waf-logs:   Firehose -> S3 (Parquet) pipeline + Glue catalog + Athena
-#                 saved queries (Day 35). Wired BACK into the WAF module so
+#                 saved queries. Wired BACK into the WAF module so
 #                 the web ACL logging configuration points at our Firehose.
 #
 # All us-east-1-only resources (CloudFront, WAF CLOUDFRONT scope, Lambda@Edge,

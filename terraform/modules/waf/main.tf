@@ -1,16 +1,16 @@
 ###############################################################################
 # WAFv2 web ACL — CLOUDFRONT scope.
 #
-# Day 31 (baseline):
+# Baseline managed rule groups:
 #   - Common, KnownBadInputs, SQLi managed rule groups
-# Day 32:
+# Additional protections:
 #   - Linux, IpReputation, AnonymousIpList managed rule groups
 #   - Rate-limit rule-group reference (defined in rate_limit.tf)
 #   - Custom rule-group reference (defined in custom_rules.tf)
 #   - Geo allow-list applied as a rule when allowed_countries is non-empty
-# Future:
-#   - Day 33: Bot Control + CAPTCHA / challenge actions
-#   - Day 35: Firehose logging configuration
+# Optional add-ons:
+#   - Bot Control + CAPTCHA / challenge actions
+#   - Firehose logging configuration
 #
 # IMPORTANT: every resource in this module MUST be created in us-east-1.
 # The root passes the aliased provider explicitly; the module re-declares the
@@ -19,7 +19,7 @@
 # WCU budget — six managed rule groups + 50 WCU rate-limit + 50 WCU custom
 # total around 1,475 WCU. Default WAFv2 ceiling is 1,500; we exclude noisy
 # sub-rules (SizeRestrictions_BODY) to keep headroom and request a
-# service-quota increase before adding Bot Control on Day 33 (~50 WCU more).
+# service-quota increase before adding Bot Control (~50 WCU more).
 ###############################################################################
 
 terraform {
@@ -223,7 +223,7 @@ resource "aws_wafv2_web_acl" "this" {
   }
 
   # ---------------------------------------------------------------------------
-  # Rule 65 — AWSManagedRulesBotControlRuleSet  (Day 33, ~50 WCU)
+  # Rule 65 — AWSManagedRulesBotControlRuleSet  (~50 WCU)
   #
   # Sophisticated bot detection. Wrapped in a `scope_down_statement` so it
   # only inspects requests targeting the high-value `/api` surface — see

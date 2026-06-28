@@ -1,7 +1,7 @@
 ###############################################################################
 # WAF logs — Glue catalog (database + table + crawler).
 #
-# Day 35 (`feat(athena)`).
+# Part of the WAF log analytics pipeline.
 #
 # Why both an explicit table AND a crawler?
 #

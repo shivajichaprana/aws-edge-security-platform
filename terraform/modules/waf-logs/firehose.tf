@@ -1,12 +1,12 @@
 ###############################################################################
 # WAF logs — Kinesis Data Firehose delivery stream.
 #
-# Day 35 (`feat(waf-logs)`).
+# Part of the WAF log analytics pipeline.
 #
 # Pipeline shape:
 #
 #   WAFv2 web ACL (us-east-1, CLOUDFRONT scope)
-#       |  aws_wafv2_web_acl_logging_configuration  (Day 33, in waf module)
+#       |  aws_wafv2_web_acl_logging_configuration  (in waf module)
 #       v
 #   Kinesis Firehose delivery stream  <-- THIS RESOURCE
 #       |  - dynamic partitioning by date (year/month/day/hour)
