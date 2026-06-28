@@ -159,7 +159,7 @@ resource "aws_athena_named_query" "top_blocked_ips" {
   description = "Top 50 client IPs ranked by BLOCK actions over the last 24 hours."
   query       = <<-SQL
     -- Top blocked client IPs in the last 24 hours.
-    -- Partition pruning: year/month/day = current UTC date and yesterday.
+    -- Partition pruning: year/month/day = current UTC date and the prior date.
     SELECT
       httprequest.clientip                       AS client_ip,
       httprequest.country                        AS country,

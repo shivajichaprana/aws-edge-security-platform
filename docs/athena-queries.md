@@ -38,7 +38,7 @@ the last 24 hours, broken out by country and rate-based-vs-other.
 incident — feed the top-N IPs into the `blocked_ips` variable on the WAF
 module to enforce a hard block.
 
-**Cost:** scans 2 day partitions (yesterday + today). Typical scan: ~50 MB.
+**Cost:** scans 2 day partitions (the prior date + today). Typical scan: ~50 MB.
 
 ### 2. `02_top_matched_rules`
 
