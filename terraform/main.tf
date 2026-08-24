@@ -48,10 +48,10 @@ module "waf_logs" {
     aws.us_east_1 = aws.us_east_1
   }
 
-  name_prefix             = local.name_prefix
-  log_retention_days      = var.waf_log_retention_days
-  analyst_principal_arns  = var.waf_logs_analyst_principal_arns
-  tags                    = local.default_tags
+  name_prefix            = local.name_prefix
+  log_retention_days     = var.waf_log_retention_days
+  analyst_principal_arns = var.waf_logs_analyst_principal_arns
+  tags                   = local.default_tags
 }
 
 ###############################################################################

@@ -73,7 +73,7 @@ jobs:
           terraform_wrapper: false
 
       - name: Cache Terraform plugins
-        uses: actions/cache@13aacd865c20de90d75de3b17ebe84f7a17d57d2 # v4.0.0
+        uses: actions/cache@v4 # GitHub auto-fails cache actions below v4.2.0; track v4
         with:
           path: ~/.terraform.d/plugin-cache
           key: ${{ runner.os }}-terraform-${{ hashFiles('**/versions.tf') }}

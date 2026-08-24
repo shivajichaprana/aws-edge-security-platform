@@ -36,8 +36,8 @@ variable "firehose_buffer_mb" {
 
     Range: 64-128 (AWS lower bound is 64 for Parquet conversion).
   EOT
-  type        = number
-  default     = 64
+  type    = number
+  default = 64
 
   validation {
     condition     = var.firehose_buffer_mb >= 64 && var.firehose_buffer_mb <= 128
@@ -51,8 +51,8 @@ variable "firehose_buffer_seconds" {
     near-real-time SOC dashboards 60s is a reasonable default. Increase
     to 300s if your traffic is bursty and you want better Parquet packing.
   EOT
-  type        = number
-  default     = 60
+  type    = number
+  default = 60
 
   validation {
     condition     = var.firehose_buffer_seconds >= 60 && var.firehose_buffer_seconds <= 900
@@ -81,8 +81,8 @@ variable "log_retention_days" {
     aligns with most regulator (PCI-DSS, SOC 2) audit windows. After this
     many days, objects are permanently deleted via the lifecycle expiry rule.
   EOT
-  type        = number
-  default     = 365
+  type    = number
+  default = 365
 
   validation {
     condition     = var.log_retention_days >= 90 && var.log_retention_days <= 2555
@@ -101,8 +101,8 @@ variable "analyst_principal_arns" {
     CloudWatch Logs can touch the CMK. Add the SOC analyst role / Athena
     workgroup-execution role here once known.
   EOT
-  type        = list(string)
-  default     = []
+  type    = list(string)
+  default = []
 
   validation {
     condition = alltrue([
@@ -124,8 +124,8 @@ variable "bytes_scanned_cutoff_bytes" {
     bill is generated. Default 10 GiB covers all the supplied saved
     queries with months of data; raise it for ad-hoc forensic deep-dives.
   EOT
-  type        = number
-  default     = 10737418240 # 10 GiB
+  type    = number
+  default = 10737418240 # 10 GiB
 
   validation {
     condition     = var.bytes_scanned_cutoff_bytes >= 10485760 # 10 MiB minimum per AWS quota

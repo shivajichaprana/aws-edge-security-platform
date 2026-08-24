@@ -73,19 +73,19 @@ resource "aws_glue_catalog_table" "waf_logs" {
     # Hive-style partition projection — Athena auto-discovers partitions
     # without needing a crawler refresh. This keeps recent-data queries fast
     # and removes a class of "where are my partitions?" bugs.
-    "projection.enabled"           = "true"
-    "projection.year.type"         = "integer"
-    "projection.year.range"        = "2026,2099"
-    "projection.month.type"        = "integer"
-    "projection.month.range"       = "1,12"
-    "projection.month.digits"      = "2"
-    "projection.day.type"          = "integer"
-    "projection.day.range"         = "1,31"
-    "projection.day.digits"        = "2"
-    "projection.hour.type"         = "integer"
-    "projection.hour.range"        = "0,23"
-    "projection.hour.digits"       = "2"
-    "storage.location.template"    = "s3://${aws_s3_bucket.waf_logs.bucket}/waf-logs/year=$${year}/month=$${month}/day=$${day}/hour=$${hour}/"
+    "projection.enabled"        = "true"
+    "projection.year.type"      = "integer"
+    "projection.year.range"     = "2026,2099"
+    "projection.month.type"     = "integer"
+    "projection.month.range"    = "1,12"
+    "projection.month.digits"   = "2"
+    "projection.day.type"       = "integer"
+    "projection.day.range"      = "1,31"
+    "projection.day.digits"     = "2"
+    "projection.hour.type"      = "integer"
+    "projection.hour.range"     = "0,23"
+    "projection.hour.digits"    = "2"
+    "storage.location.template" = "s3://${aws_s3_bucket.waf_logs.bucket}/waf-logs/year=$${year}/month=$${month}/day=$${day}/hour=$${hour}/"
   }
 
   partition_keys {

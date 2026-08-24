@@ -94,11 +94,11 @@ resource "aws_iam_role_policy_attachment" "edge_basic" {
 resource "aws_lambda_function" "security_headers" {
   provider = aws.us_east_1
 
-  function_name = "${var.name_prefix}-security-headers"
-  role          = aws_iam_role.edge.arn
-  runtime       = "nodejs18.x"
-  handler       = "index.handler"
-  filename      = data.archive_file.security_headers.output_path
+  function_name    = "${var.name_prefix}-security-headers"
+  role             = aws_iam_role.edge.arn
+  runtime          = "nodejs18.x"
+  handler          = "index.handler"
+  filename         = data.archive_file.security_headers.output_path
   source_code_hash = data.archive_file.security_headers.output_base64sha256
 
   # Lambda@Edge limits: viewer-* functions max 5s, 128 MB.
@@ -119,11 +119,11 @@ resource "aws_lambda_function" "security_headers" {
 resource "aws_lambda_function" "geo_router" {
   provider = aws.us_east_1
 
-  function_name = "${var.name_prefix}-geo-router"
-  role          = aws_iam_role.edge.arn
-  runtime       = "nodejs18.x"
-  handler       = "index.handler"
-  filename      = data.archive_file.geo_router.output_path
+  function_name    = "${var.name_prefix}-geo-router"
+  role             = aws_iam_role.edge.arn
+  runtime          = "nodejs18.x"
+  handler          = "index.handler"
+  filename         = data.archive_file.geo_router.output_path
   source_code_hash = data.archive_file.geo_router.output_base64sha256
 
   # origin-request can use up to 30s and 10 GB; we stay tight.
@@ -144,11 +144,11 @@ resource "aws_lambda_function" "geo_router" {
 resource "aws_lambda_function" "header_rewrite" {
   provider = aws.us_east_1
 
-  function_name = "${var.name_prefix}-header-rewrite"
-  role          = aws_iam_role.edge.arn
-  runtime       = "nodejs18.x"
-  handler       = "index.handler"
-  filename      = data.archive_file.header_rewrite.output_path
+  function_name    = "${var.name_prefix}-header-rewrite"
+  role             = aws_iam_role.edge.arn
+  runtime          = "nodejs18.x"
+  handler          = "index.handler"
+  filename         = data.archive_file.header_rewrite.output_path
   source_code_hash = data.archive_file.header_rewrite.output_base64sha256
 
   memory_size = 128
