@@ -17,9 +17,10 @@
 # WAF logging Firehose) consume the aliased provider `aws.us_east_1`.
 ###############################################################################
 
-data "aws_caller_identity" "current" {}
-data "aws_partition" "current" {}
-data "aws_region" "current" {}
+# NOTE: aws_caller_identity / aws_partition / aws_region were declared here and
+# never read. Each child module under modules/ declares its own, which is why
+# they looked used on a repo-wide grep — tflint scopes this rule per module and
+# was right that the root has no use for them.
 
 locals {
   # The fully qualified resource-name prefix used throughout the stack.

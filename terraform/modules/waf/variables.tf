@@ -46,8 +46,8 @@ variable "allowed_countries" {
     `CloudFront-Viewer-Country` does not appear in this list. Pass `[]`
     (default) to disable geo-fencing entirely.
   EOT
-  type    = list(string)
-  default = []
+  type        = list(string)
+  default     = []
 
   validation {
     condition = alltrue([
@@ -65,8 +65,8 @@ variable "blocked_ips" {
     rule of the custom rule group. Empty list keeps the rule wired up but
     means it never matches.
   EOT
-  type    = list(string)
-  default = []
+  type        = list(string)
+  default     = []
 
   validation {
     condition = alltrue([
@@ -84,8 +84,8 @@ variable "global_rate_limit" {
     20,000,000. Default 2,000 covers typical SaaS traffic per individual user
     while still catching scrapers.
   EOT
-  type    = number
-  default = 2000
+  type        = number
+  default     = 2000
 
   validation {
     condition     = var.global_rate_limit >= 100 && var.global_rate_limit <= 20000000
@@ -100,8 +100,8 @@ variable "login_rate_limit" {
     thousands of attempts; AWS WAF enforces a 100/5min minimum on rate-based
     rules so that is the floor we use.
   EOT
-  type    = number
-  default = 100
+  type        = number
+  default     = 100
 
   validation {
     condition     = var.login_rate_limit >= 100 && var.login_rate_limit <= 20000000
@@ -142,8 +142,8 @@ variable "bot_control_enabled" {
     pre-production or when running cost-sensitive workloads — Bot Control
     has request-based pricing in addition to the standard WAF charges.
   EOT
-  type    = bool
-  default = true
+  type        = bool
+  default     = true
 }
 
 variable "bot_control_inspection_level" {
@@ -153,8 +153,8 @@ variable "bot_control_inspection_level" {
     such as headless Chrome, Selenium, Puppeteer). See
     docs/bot-control-guide.md for the trade-off.
   EOT
-  type    = string
-  default = "TARGETED"
+  type        = string
+  default     = "TARGETED"
 
   validation {
     condition     = contains(["COMMON", "TARGETED"], var.bot_control_inspection_level)
@@ -169,8 +169,8 @@ variable "bot_control_scope_down_path" {
     avoid Bot Control's per-request fee on assets. Pass `/` to inspect
     every request.
   EOT
-  type    = string
-  default = "/api"
+  type        = string
+  default     = "/api"
 
   validation {
     condition     = can(regex("^/", var.bot_control_scope_down_path))
@@ -184,8 +184,8 @@ variable "trusted_bot_ips" {
     own monitoring egress and partner integrations). Empty by default;
     AWS treats an empty IPSet as never-matching so the bypass is a no-op.
   EOT
-  type    = list(string)
-  default = []
+  type        = list(string)
+  default     = []
 
   validation {
     condition = alltrue([
@@ -202,8 +202,8 @@ variable "captcha_paths" {
     CAPTCHA is more user-friendly than a hard block. Set to `[]` to
     disable.
   EOT
-  type    = list(string)
-  default = ["/login", "/signup"]
+  type        = list(string)
+  default     = ["/login", "/signup"]
 
   validation {
     condition = alltrue([
@@ -220,8 +220,8 @@ variable "challenge_paths" {
     customers is unacceptable but unauthenticated bots must be filtered
     out. Set to `[]` to disable.
   EOT
-  type    = list(string)
-  default = ["/checkout"]
+  type        = list(string)
+  default     = ["/checkout"]
 
   validation {
     condition = alltrue([
@@ -237,8 +237,8 @@ variable "log_destination_arn" {
     Created by the waf-logs module. Pass `""` to disable logging
     entirely (the logging configuration resource is omitted via count).
   EOT
-  type    = string
-  default = ""
+  type        = string
+  default     = ""
 
   validation {
     condition = (

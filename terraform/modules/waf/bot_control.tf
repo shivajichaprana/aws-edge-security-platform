@@ -52,10 +52,10 @@ locals {
   # custom `bot_label_responses` rule group below where they get CAPTCHA
   # instead of an outright block.
   bot_control_count_rules = [
-    "CategoryHttpLibrary",        # python-requests, axios, etc — could be legit SDK use
-    "CategoryMonitoring",         # uptime checkers, synthetics
-    "CategorySearchEngine",       # Googlebot, Bingbot — SEO matters
-    "SignalAutomatedBrowser",     # headless Chrome / Puppeteer — applied via CAPTCHA below
+    "CategoryHttpLibrary",    # python-requests, axios, etc — could be legit SDK use
+    "CategoryMonitoring",     # uptime checkers, synthetics
+    "CategorySearchEngine",   # Googlebot, Bingbot — SEO matters
+    "SignalAutomatedBrowser", # headless Chrome / Puppeteer — applied via CAPTCHA below
   ]
 }
 

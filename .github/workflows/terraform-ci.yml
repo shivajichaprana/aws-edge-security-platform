@@ -24,7 +24,9 @@ permissions:
 
 env:
   TF_VERSION: '1.7.5'
-  TFLINT_VERSION: 'v0.50.3'
+  # Must be >= v0.54.0: terraform/.tflint.hcl uses `call_module_type`, which
+  # replaced the `module` attribute in v0.54.0. On v0.50.3 the config fails to load.
+  TFLINT_VERSION: 'v0.64.0'
   WORKING_DIR: terraform
 
 concurrency:

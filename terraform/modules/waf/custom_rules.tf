@@ -77,7 +77,7 @@ resource "aws_wafv2_ip_set" "blocked_v6" {
 resource "aws_wafv2_rule_group" "custom_rules" {
   name     = "${var.name_prefix}-custom-rg"
   scope    = "CLOUDFRONT"
-  capacity = 200  # bumped from 50 to accommodate CAPTCHA/challenge rules
+  capacity = 200 # bumped from 50 to accommodate CAPTCHA/challenge rules
 
   # ---------------------------------------------------------------------------
   # Rule 1 — BlockListedIPs
