@@ -1,0 +1,20 @@
+# Trivy suppressions for aws-edge-security-platform.
+#
+# Only findings that cannot be fixed without breaking the design are listed, and
+# each one carries the reason. Everything else is expected to pass.
+
+# AVD-AWS-0057 - IAM policy should avoid wildcards.
+# modules/waf-logs/firehose.tf grants logs:PutLogEvents on
+# "${aws_cloudwatch_log_group.firehose.arn}:*". A CloudWatch Logs group ARN must
+# carry a ":*" suffix to reach the log streams inside it - that is the form AWS
+# documents, and without it the delivery stream cannot report its own errors.
+# Every other statement in that policy names an explicit ARN.
+AVD-AWS-0057
+
+# AVD-AWS-0010 - CloudFront distribution should have access logging.
+# Standard logging is wired up in modules/cloudfront/main.tf, but through a
+# dynamic block that only activates when the caller passes
+# var.log_bucket_domain_name. Trivy reads the static configuration and cannot see
+# it. The waf-logs module also ships real-time logs via Kinesis Data Streams and
+# Firehose, which is what the security analytics in this repo actually query.
+AVD-AWS-0010
