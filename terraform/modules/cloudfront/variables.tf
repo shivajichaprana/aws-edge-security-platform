@@ -76,6 +76,12 @@ variable "log_bucket_domain_name" {
   default     = null
 }
 
+variable "acm_certificate_arn" {
+  description = "Optional ACM certificate ARN, in us-east-1, for a custom domain. When set, the distribution uses SNI and pins the minimum TLS version to TLSv1.2_2021. When null the default *.cloudfront.net certificate is used, and AWS fixes its minimum protocol version at TLSv1 - it cannot be raised."
+  type        = string
+  default     = null
+}
+
 variable "tags" {
   description = "Tags applied to the distribution."
   type        = map(string)
