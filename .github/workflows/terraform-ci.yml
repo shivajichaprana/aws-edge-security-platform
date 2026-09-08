@@ -58,12 +58,16 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        # The cloudfront, lambda-edge and waf-logs modules declare
+        # configuration_aliases = [aws.us_east_1], so their us-east-1 provider is
+        # supplied by the caller. Terraform cannot validate such a module on its
+        # own - it reports "Provider configuration not present" for every resource
+        # using the alias - so validating them standalone is not possible, only
+        # noisy. The root configuration below instantiates all four modules and
+        # terraform validate covers child modules, so they are still validated.
         path:
           - terraform
-          - terraform/modules/cloudfront
           - terraform/modules/waf
-          - terraform/modules/lambda-edge
-          - terraform/modules/waf-logs
     steps:
       - name: Checkout
         uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
