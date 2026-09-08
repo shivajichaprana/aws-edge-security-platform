@@ -45,6 +45,18 @@ resource "aws_s3_bucket" "athena_results" {
   })
 }
 
+# Versioning - results are ephemeral, but an unversioned bucket leaves no way to
+# recover from an accidental overwrite mid-query. The lifecycle rule below expires
+# noncurrent versions after a day, so this costs almost nothing.
+resource "aws_s3_bucket_versioning" "athena_results" {
+  provider = aws.us_east_1
+  bucket   = aws_s3_bucket.athena_results.id
+
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+
 resource "aws_s3_bucket_ownership_controls" "athena_results" {
   provider = aws.us_east_1
   bucket   = aws_s3_bucket.athena_results.id
@@ -93,6 +105,10 @@ resource "aws_s3_bucket_lifecycle_configuration" "athena_results" {
 
     abort_incomplete_multipart_upload {
       days_after_initiation = 1
+    }
+
+    noncurrent_version_expiration {
+      noncurrent_days = 1
     }
   }
 }
