@@ -304,10 +304,11 @@ resource "aws_glue_security_configuration" "waf_logs" {
 resource "aws_glue_crawler" "waf_logs" {
   provider      = aws.us_east_1
   name          = "${var.name_prefix}-waf-logs-crawler"
-  security_configuration = aws_glue_security_configuration.waf_logs.name
   description   = "Daily crawler for WAF logs — keeps the catalog table in sync with on-disk Parquet."
   database_name = aws_glue_catalog_database.waf_logs.name
   role          = aws_iam_role.glue_crawler.arn
+
+  security_configuration = aws_glue_security_configuration.waf_logs.name
 
   s3_target {
     path = "s3://${aws_s3_bucket.waf_logs.bucket}/waf-logs/"
