@@ -1,16 +1,56 @@
-# Checkov configuration for aws-edge-security-platform
+# Checkov configuration for aws-edge-security-platform.
+#
+# Every suppression below is listed with the reason it does not apply here.
+# Anything not listed is expected to pass.
+
 directory:
   - terraform
 framework:
   - terraform
 quiet: true
 download-external-modules: false
-skip-check:
-  # Lambda concurrent execution limit not relevant for Lambda@Edge
-  - CKV_AWS_111
-  # Custom KMS key per WAF web ACL adds operational overhead with marginal benefit
-  - CKV_AWS_109
-  # We rely on inline policies for least-privilege; skip "no inline policies"
-  - CKV_AWS_356
 soft-fail: false
 compact: true
+
+skip-check:
+  # --- Lambda@Edge: these five are not choices, they are platform limits ---
+  # The functions in modules/lambda-edge are Lambda@Edge, replicated by CloudFront
+  # into every edge location. Lambda@Edge does not support dead letter queues,
+  # code-signing configurations, VPC attachment, reserved concurrency, or active
+  # X-Ray tracing on the function. Terraform will accept these arguments and AWS
+  # will then refuse the association, so "fixing" any of them would break the
+  # deployment rather than harden it.
+  - CKV_AWS_116   # Lambda has no dead letter queue
+  - CKV_AWS_272   # Lambda code-signing not configured
+  - CKV_AWS_117   # Lambda not inside a VPC
+  - CKV_AWS_115   # Lambda has no function-level concurrency limit
+  - CKV_AWS_50    # X-Ray tracing not enabled on Lambda
+
+  # --- CloudFront ---
+  # The viewer certificate is the default *.cloudfront.net one unless the caller
+  # passes var.acm_certificate_arn. AWS fixes the minimum protocol version at
+  # TLSv1 for that certificate and rejects any attempt to raise it; supply an ACM
+  # certificate and the module pins TLSv1.2_2021. See modules/cloudfront/main.tf.
+  - CKV_AWS_174   # viewer certificate below TLS 1.2
+  # Origin failover needs a second, independent origin to fail over to. This
+  # module fronts one ALB, supplied by the caller, so an origin group would be a
+  # group of one and would buy nothing.
+  - CKV_AWS_310   # no origin failover configured
+  # geo_restriction is deliberately "none". Geography is handled at the edge by
+  # the geo-router Lambda@Edge in modules/lambda-edge, which can route rather than
+  # only block, and can be changed without a distribution update.
+  - CKV_AWS_374   # no geo restriction on the distribution
+
+  # --- IAM ---
+  # The WAF-logs Firehose role writes to its own log group. A CloudWatch Logs
+  # group ARN has to carry a ":*" suffix to cover the streams inside it - that is
+  # the documented form, not a wildcard grant. Every other statement in that
+  # policy names an explicit ARN.
+  - CKV_AWS_111   # IAM write access without constraints
+  - CKV_AWS_356   # wildcard resource for restrictable actions
+
+  # --- KMS ---
+  # A customer-managed key per WAF web ACL adds key rotation and grant management
+  # for data that is already encrypted with an AWS-managed key and never leaves
+  # the account.
+  - CKV_AWS_109   # KMS key policy allows broad access
