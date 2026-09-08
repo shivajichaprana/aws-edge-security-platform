@@ -8,11 +8,6 @@ on:
       - 'lambda-edge/**'
       - 'cloudfront-functions/**'
       - '.github/workflows/terraform-ci.yml'
-      # The scanner configs decide what checkov and trivy report, so a change to
-      # either has to re-run the scan - otherwise the badge keeps showing a
-      # result the current config would not produce.
-      - '.checkov.yaml'
-      - '.trivyignore'
   pull_request:
     branches: [main]
     paths:
@@ -20,11 +15,6 @@ on:
       - 'lambda-edge/**'
       - 'cloudfront-functions/**'
       - '.github/workflows/terraform-ci.yml'
-      # The scanner configs decide what checkov and trivy report, so a change to
-      # either has to re-run the scan - otherwise the badge keeps showing a
-      # result the current config would not produce.
-      - '.checkov.yaml'
-      - '.trivyignore'
   workflow_dispatch:
 
 permissions:
@@ -138,14 +128,12 @@ jobs:
       - name: Run checkov
         uses: bridgecrewio/checkov-action@59b9d7edfcad5b87fbe3f473a9a134a721ad03f8 # v12.3119.0
         with:
-          directory: terraform
-          framework: terraform
-          quiet: true
-          soft_fail: false
+          # Scan settings, and the reason for every suppression, live in
+          # .checkov.yaml so they are reviewable in one place. Listing skips here
+          # instead meant .checkov.yaml was never read at all.
+          config_file: .checkov.yaml
           output_format: cli,sarif
           output_file_path: console,checkov.sarif
-          download_external_modules: false
-          skip_check: CKV_AWS_111,CKV_AWS_109,CKV_AWS_356
 
       - name: Upload SARIF
         if: always()
@@ -172,6 +160,8 @@ jobs:
           severity: 'CRITICAL,HIGH,MEDIUM'
           exit-code: '1'
           ignore-unfixed: true
+          # Reasons for each entry are written into the file itself.
+          trivyignores: '.trivyignore'
 
       - name: Upload SARIF
         if: always()
