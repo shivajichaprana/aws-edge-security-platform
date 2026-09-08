@@ -276,9 +276,35 @@ resource "aws_iam_role_policy_attachment" "glue_s3_read" {
 #      tools that don't honour partition projection (older Spark builds).
 ###############################################################################
 
+# Encryption for the crawler: its own CloudWatch log stream and any bookmark it
+# writes are encrypted with the same CMK that protects the WAF log bucket, so the
+# catalog side of the pipeline is not the weak link.
+resource "aws_glue_security_configuration" "waf_logs" {
+  provider = aws.us_east_1
+  name     = "${var.name_prefix}-waf-logs-glue-security"
+
+  encryption_configuration {
+    cloudwatch_encryption {
+      cloudwatch_encryption_mode = "SSE-KMS"
+      kms_key_arn                = aws_kms_key.waf_logs.arn
+    }
+
+    job_bookmarks_encryption {
+      job_bookmarks_encryption_mode = "CSE-KMS"
+      kms_key_arn                   = aws_kms_key.waf_logs.arn
+    }
+
+    s3_encryption {
+      s3_encryption_mode = "SSE-KMS"
+      kms_key_arn        = aws_kms_key.waf_logs.arn
+    }
+  }
+}
+
 resource "aws_glue_crawler" "waf_logs" {
   provider      = aws.us_east_1
   name          = "${var.name_prefix}-waf-logs-crawler"
+  security_configuration = aws_glue_security_configuration.waf_logs.name
   description   = "Daily crawler for WAF logs — keeps the catalog table in sync with on-disk Parquet."
   database_name = aws_glue_catalog_database.waf_logs.name
   role          = aws_iam_role.glue_crawler.arn
