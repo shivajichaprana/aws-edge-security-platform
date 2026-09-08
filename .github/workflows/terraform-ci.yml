@@ -8,6 +8,11 @@ on:
       - 'lambda-edge/**'
       - 'cloudfront-functions/**'
       - '.github/workflows/terraform-ci.yml'
+      # The scanner configs decide what checkov and trivy report, so a change to
+      # either has to re-run the scan - otherwise the badge keeps showing a
+      # result the current config would not produce.
+      - '.checkov.yaml'
+      - '.trivyignore'
   pull_request:
     branches: [main]
     paths:
@@ -15,6 +20,11 @@ on:
       - 'lambda-edge/**'
       - 'cloudfront-functions/**'
       - '.github/workflows/terraform-ci.yml'
+      # The scanner configs decide what checkov and trivy report, so a change to
+      # either has to re-run the scan - otherwise the badge keeps showing a
+      # result the current config would not produce.
+      - '.checkov.yaml'
+      - '.trivyignore'
   workflow_dispatch:
 
 permissions:
