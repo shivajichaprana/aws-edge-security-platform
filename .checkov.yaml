@@ -54,3 +54,45 @@ skip-check:
   # for data that is already encrypted with an AWS-managed key and never leaves
   # the account.
   - CKV_AWS_109   # KMS key policy allows broad access
+
+  # --- CloudWatch retention: the audit trail is in S3, not in these groups ---
+  # The retention that matters for an audit is the 365-day lifecycle on the WAF
+  # log Parquet files in S3 (modules/waf-logs/variables.tf, log_retention_days).
+  # The two groups this check hits are operational, not evidential: Firehose
+  # delivery errors, kept 14 days, and Lambda@Edge stdout, kept 30. Lambda@Edge
+  # replicates into every edge region and each one gets its own log group, so a
+  # year of debug output would be billed roughly twenty times over for nothing.
+  - CKV_AWS_338   # log group retains logs for less than a year
+  # Same three Lambda@Edge groups. Terraform only pre-creates the us-east-1 one;
+  # AWS creates the rest automatically, in each region, out of Terraform's reach.
+  # A CMK here would encrypt one copy of roughly twenty and would read as broader
+  # coverage than it is. The Firehose group, which carries the WAF data path, is
+  # encrypted with the waf_logs CMK.
+  - CKV_AWS_158   # log group not encrypted with a CMK
+
+  # --- CloudFront response headers ---
+  # Security headers are set by the security_headers Lambda@Edge function on
+  # viewer-response (modules/lambda-edge/main.tf). That is what this repository is
+  # for. A response headers policy would be a second, competing source of the same
+  # headers.
+  - CKV2_AWS_32   # distribution has no response headers policy
+
+  # --- S3: log buckets are not ordinary buckets ---
+  # Access logging on a log bucket writes into a log bucket. Pointing it at itself
+  # recurses, and a third bucket would raise the same finding again. Object access
+  # is already captured by CloudTrail data events.
+  - CKV_AWS_18    # S3 bucket has no access logging
+  # Nothing subscribes to object events here. The Glue crawler runs on a schedule
+  # (04:00 UTC daily) because partitioned Parquet is crawled by prefix, not by file.
+  - CKV2_AWS_62   # S3 bucket has no event notifications
+  # Cross-region replication would double the storage bill for data that is already
+  # expiring - the Athena results bucket clears at 7 days and the WAF logs at 365.
+  # Neither is a system of record.
+  - CKV_AWS_144   # S3 bucket has no cross-region replication
+
+  # --- False positive ---
+  # The web ACL already includes AWSManagedRulesKnownBadInputsRuleSet, which is the
+  # rule group carrying the Log4j signatures - see modules/waf/main.tf, rule
+  # "AWSManagedRulesKnownBadInputsRuleSet". Checkov's graph check does not follow it
+  # across the module boundary and reports the distribution as unprotected.
+  - CKV2_AWS_47   # WAF has no Log4j vulnerability rule
