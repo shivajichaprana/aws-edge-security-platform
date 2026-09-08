@@ -3,7 +3,7 @@
 ###############################################################################
 
 variable "name_prefix" {
-  description = "Resource-name prefix (e.g. edge-security-dev). Web ACL is named ${name_prefix}-web-acl."
+  description = "Resource-name prefix (e.g. edge-security-dev). The Web ACL is named after it, with a -web-acl suffix."
   type        = string
 
   validation {
