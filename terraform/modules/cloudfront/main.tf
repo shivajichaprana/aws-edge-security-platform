@@ -137,8 +137,14 @@ resource "aws_cloudfront_distribution" "this" {
   # Once Route 53 + ACM are wired up (out of scope for the baseline) this block will
   # be replaced with `acm_certificate_arn` + `ssl_support_method = "sni-only"`.
   # ---------------------------------------------------------------------------
+  # With the default *.cloudfront.net certificate AWS fixes the minimum protocol
+  # version at TLSv1 and refuses any attempt to raise it. Supplying an ACM
+  # certificate (us-east-1) switches the distribution to SNI and pins TLSv1.2_2021.
   viewer_certificate {
-    cloudfront_default_certificate = true
+    cloudfront_default_certificate = var.acm_certificate_arn == null
+    acm_certificate_arn            = var.acm_certificate_arn
+    ssl_support_method             = var.acm_certificate_arn == null ? null : "sni-only"
+    minimum_protocol_version       = var.acm_certificate_arn == null ? null : "TLSv1.2_2021"
   }
 
   # ---------------------------------------------------------------------------
