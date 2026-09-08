@@ -158,6 +158,11 @@ jobs:
           format: 'sarif'
           output: 'trivy.sarif'
           severity: 'CRITICAL,HIGH,MEDIUM'
+          # Without this, trivy-action drops --severity whenever the format is sarif,
+          # so the scan ran at every severity and exit-code 1 fired on LOW findings
+          # the line above says to ignore. The build was failing on informational
+          # results, not on the ones this job is meant to gate.
+          limit-severities-for-sarif: true
           exit-code: '1'
           ignore-unfixed: true
           # Reasons for each entry are written into the file itself.
